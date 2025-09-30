@@ -56,6 +56,7 @@ assert SERVING_ENDPOINT, \
 # Check if the endpoint is supported
 endpoint_supported = is_endpoint_supported(SERVING_ENDPOINT)
 
+
 def get_user_info():
     headers = st.context.headers
     return dict(
@@ -135,10 +136,13 @@ def sql_query_with_user_token(query: str, user_token: str) -> pd.DataFrame:
 user_token = st.context.headers.get('X-Forwarded-Access-Token')
 
 # Query the SQL data with the user credentials
-data = sql_query_with_user_token("SELECT * FROM demo_soumyashree_patra.bharat_bank_rm.customer_product_value LIMIT 500", user_token=user_token)
+#data = sql_query_with_user_token("SELECT * FROM demo_soumyashree_patra.bharat_bank_rm.customer_product_value LIMIT 500", user_token=user_token)
 
 # In order to query with Service Principal credentials, comment the above line and uncomment the below line
 # data = sql_query_with_service_principal("SELECT * FROM samples.nyctaxi.trips LIMIT 5000")
+# Query the SQL data with the user credentials
+data = sql_query_with_service_principal("SELECT * FROM demo_soumyashree_patra.bharat_bank_rm.customer_product_value LIMIT 500")
+
 #with col1:
 #    st.scatter_chart(data=data, height=400, width=700, y="fare_amount", x="trip_distance")
 #with col2:
@@ -526,7 +530,7 @@ def render_portfolio_review():
     
     # Portfolio data with enhanced columns
     portfolio_data = get_lh_portfolio_data()
-    st.dataframe(data=data, height=300, use_container_width=True)
+    st.dataframe(data=data, height=800, use_container_width=True)
     
     # Summary metrics
     # col1, col2, col3, col4 = st.columns(4)
@@ -548,8 +552,8 @@ def render_portfolio_review():
     # Format currency columns
     display_data = portfolio_data.copy()
     currency_cols = ['CustomerID', 'Name', 'ProductType']
-    for col in currency_cols:
-        display_data[f"{col}_formatted"] = display_data[col].apply(lambda x: f"₹{x/100000:.1f}L")
+    #for col in currency_cols:
+    #    display_data[f"{col}_formatted"] = display_data[col].apply(lambda x: f"₹{x/100000:.1f}L")
     
     # Create display dataframe
     final_display = display_data[['CustomerID', 'Name', 'ProductType']].copy() 
@@ -1140,10 +1144,11 @@ def render_agent_assistant():
     st.markdown('<div class="tab-header">🤖 Agent-isstant - Your Banking Expert</div>', unsafe_allow_html=True)
 
     # Check if endpoint is supported and show appropriate UI
-    if not endpoint_supported:
+    #if not endpoint_supported:
+    if endpoint_supported:
         st.error("⚠️ Unsupported Endpoint Type")
         st.markdown(
-            f"The endpoint `{SERVING_ENDPOINT}` is not compatible with this basic chatbot template.\n\n"
+            f"The endpoint `{SERVING_ENDPOINT}` of type `{endpoint_supported}` is not compatible with this basic chatbot template.\n\n"
             "This template only supports chat completions-compatible endpoints.\n\n"
             "👉 **For a richer chatbot template** that supports all conversational endpoints on Databricks, "
             "please see the [Databricks documentation](https://docs.databricks.com/aws/en/generative-ai/agent-framework/chat-app)."

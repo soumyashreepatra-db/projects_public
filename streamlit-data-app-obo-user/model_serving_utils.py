@@ -15,7 +15,9 @@ def is_endpoint_supported(endpoint_name: str) -> bool:
 
 def _validate_endpoint_task_type(endpoint_name: str) -> None:
     """Validate that the endpoint has a supported task type."""
-    if not is_endpoint_supported(endpoint_name):
+    #if not is_endpoint_supported(endpoint_name):
+    if is_endpoint_supported(endpoint_name):
+        print("EP: ",is_endpoint_supported(endpoint_name))
         raise Exception(
             f"Detected unsupported endpoint type for this basic chatbot template. "
             f"This chatbot template only supports chat completions-compatible endpoints. "
@@ -23,13 +25,15 @@ def _validate_endpoint_task_type(endpoint_name: str) -> None:
             f"see https://docs.databricks.com/aws/en/generative-ai/agent-framework/chat-app"
         )
 
-def _query_endpoint(endpoint_name: str, messages: list[dict[str, str]], max_tokens) -> list[dict[str, str]]:
+#def _query_endpoint(endpoint_name: str, messages: list[dict[str, str]], max_tokens) -> list[dict[str, str]]:
+def _query_endpoint(endpoint_name: str, input: list[dict[str, str]], max_output_tokens) -> list[dict[str, str]]:
     """Calls a model serving endpoint."""
     _validate_endpoint_task_type(endpoint_name)
     
     res = get_deploy_client('databricks').predict(
         endpoint=endpoint_name,
-        inputs={'messages': messages, "max_tokens": max_tokens},
+        #inputs={'messages': messages, "max_tokens": max_tokens},
+        inputs={'messages': input, "max_tokens": max_output_tokens},
     )
     if "messages" in res:
         return res["messages"]
@@ -47,3 +51,20 @@ def query_endpoint(endpoint_name, messages, max_tokens):
     returns the last message
     ."""
     return _query_endpoint(endpoint_name, messages, max_tokens)[-1]
+
+import requests
+import os
+
+def query_endpoint1(endpoint_name, messages, max_tokens=400):
+    url = f"https://{os.getenv('DATABRICKS_HOST')}/serving-endpoints/{endpoint_name}/invocations"
+    headers = {
+        "Authorization": f"Bearer {os.getenv('DATABRICKS_TOKEN')}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "input": messages,
+        "max_output_tokens": max_tokens
+    }
+    response = requests.post(url, headers=headers, json=payload)
+    response.raise_for_status()
+    return response.json()
